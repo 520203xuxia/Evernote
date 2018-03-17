@@ -1,0 +1,304 @@
+<html>
+<head>
+  <title>Java + 腾讯企业邮箱 + javamail + SSL 发送邮件 - 小LUA - 博客园</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.16299 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="833"/>
+<h1>Java + 腾讯企业邮箱 + javamail + SSL 发送邮件 - 小LUA - 博客园</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div><div><div><div><h1> Java + 腾讯企业邮箱 + javamail + SSL 发送邮件 </h1><div><div></div></div></div>
+		
+		
+			<p>说实话腾讯的企业邮箱真心不错！</p>
+<p>腾讯企业邮箱官网：http://exmail.qq.com/login/</p>
+<p>新用户注册：http://exmail.qq.com/onlinesell/intro</p>
+<p></p><div><img src="Java + 腾讯企业邮箱 + javamail + SSL 发送邮件 - 小LUA - _files/813478-20160611115319918-1428332457.png" type="image/png" data-filename="813478-20160611115319918-1428332457.png" height="305" width="576"/></div><p></p>
+<p>点击开通</p>
+<p></p><div><img src="Java + 腾讯企业邮箱 + javamail + SSL 发送邮件 - 小LUA - _files/813478-20160611115449402-659668807.png" type="image/png" data-filename="813478-20160611115449402-659668807.png" height="330" width="576"/></div><p></p>
+<p>你跟着步骤走就行了，没啥难的，如果你没有域名，你就去买一个呗，也花不了多少钱的。</p>
+<p>注册成功后，是这个页面，并且会有一个弹窗告诉你一些信息</p>
+<p></p><div><img src="Java + 腾讯企业邮箱 + javamail + SSL 发送邮件 - 小LUA - _files/813478-20160611115818105-1103835115.png" type="image/png" data-filename="813478-20160611115818105-1103835115.png" height="248" width="576"/></div><p></p>
+<p>现在你点击添加成员，因为你不添加成员的话你是无法发送邮件的。</p>
+<p></p><div><img src="Java + 腾讯企业邮箱 + javamail + SSL 发送邮件 - 小LUA - _files/813478-20160611120245215-310320454.png" type="image/png" data-filename="813478-20160611120245215-310320454.png" height="491" width="576"/></div><p></p>
+<p>完成后是这样</p>
+<p></p><div><img src="Java + 腾讯企业邮箱 + javamail + SSL 发送邮件 - 小LUA - _files/813478-20160611120430668-1447299378.png" type="image/png" data-filename="813478-20160611120430668-1447299378.png" height="153" width="576"/></div><p></p>
+<p>然后你打开腾讯企业邮箱登录界面，输入你刚才增加的成员邮箱的：登录名 + 密码，进去后是一个类似于普通QQ邮箱的界面</p>
+<p></p><div><img src="Java + 腾讯企业邮箱 + javamail + SSL 发送邮件 - 小LUA - _files/813478-20160611120718011-2003664277.png" type="image/png" data-filename="813478-20160611120718011-2003664277.png" height="226" width="576"/></div><p></p>
+<p>到这里邮箱部分就解决了，哦还有，腾讯会自动给你发一个邮件，</p>
+<p></p><div><img src="Java + 腾讯企业邮箱 + javamail + SSL 发送邮件 - 小LUA - _files/813478-20160611120842636-357268012.png" type="image/png" data-filename="813478-20160611120842636-357268012.png" height="452" width="576"/></div><p></p>
+<p>点开后是这个，</p>
+<p></p><div><img src="Java + 腾讯企业邮箱 + javamail + SSL 发送邮件 - 小LUA - _files/813478-20160611120931261-1408949743.png" type="image/png" data-filename="813478-20160611120931261-1408949743.png" height="438" width="576"/></div><p></p>
+<p>以前写过普通QQ邮箱的发送代码，我从没见过SSL，所以一开始全然不懂。。，但是上网查阅得知</p>
+<blockquote>
+<p>随着各个Mail服务器对于安全的重视,纷纷采用基于SSL的Mail登陆方式进行发送和接收电子邮件</p>
+</blockquote>
+<p>好了现在开始写代码。</p>
+<h2>大家反映之前写的容易误导人，所以今天修改了这个文章一下2017-09-05</h2>
+<p> 有一个属性文件用来存储邮箱信息的</p>
+<pre>email.properties，放在src路径下面</pre>
+<div>
+<pre>e.account=账户名
+e.pass=密码
+e.host=smtp.exmail.qq.com
+e.port=465
+e.protocol=smtp</pre>
+</div>
+<p>下面是发送类：</p>
+<div>
+<pre>package mail.demo;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.GeneralSecurityException;
+import java.util.Date;
+import java.util.Properties;
+
+import javax.mail.Authenticator;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+
+import org.springframework.core.io.support.PropertiesLoaderUtils;
+
+import com.sun.mail.util.MailSSLSocketFactory;
+
+public class SendEmailUtil {
+
+    private static String account;    //登录用户名
+    private static String pass;        //登录密码
+    private static String host;        //服务器地址（邮件服务器）
+    private static String port;        //端口
+    private static String protocol; //协议
+    
+    static{
+        Properties prop = new Properties();
+//        InputStream instream = ClassLoader.getSystemResourceAsStream(&quot;email.properties&quot;);//测试环境
+        try {
+//            prop.load(instream);//测试环境
+            prop = PropertiesLoaderUtils.loadAllProperties(&quot;email.properties&quot;);//生产环境
+        } catch (IOException e) {
+            System.out.println(&quot;加载属性文件失败&quot;);
+        }
+        account = prop.getProperty(&quot;e.account&quot;);
+        pass = prop.getProperty(&quot;e.pass&quot;);
+        host = prop.getProperty(&quot;e.host&quot;);
+        port = prop.getProperty(&quot;e.port&quot;);
+        protocol = prop.getProperty(&quot;e.protocol&quot;);
+    }
+    
+    static class MyAuthenricator extends Authenticator{  
+        String u = null;  
+        String p = null;  
+        public MyAuthenricator(String u,String p){  
+            this.u=u;  
+            this.p=p;  
+        }  
+        @Override  
+        protected PasswordAuthentication getPasswordAuthentication() {  
+            return new PasswordAuthentication(u,p);  
+        }  
+    }
+    
+    private String to;    //收件人
+    private String subject;    //主题
+    private String content;    //内容
+    private String fileStr;    //附件路径
+
+    public SendEmailUtil(String to, String subject, String content, String fileStr) {
+        this.to = to;
+        this.subject = subject;
+        this.content = content;
+        this.fileStr = fileStr;
+    }
+
+
+
+    public void send(){
+        Properties prop = new Properties();
+        //协议
+        prop.setProperty(&quot;mail.transport.protocol&quot;, protocol);
+        //服务器
+        prop.setProperty(&quot;mail.smtp.host&quot;, host);
+        //端口
+        prop.setProperty(&quot;mail.smtp.port&quot;, port);
+        //使用smtp身份验证
+        prop.setProperty(&quot;mail.smtp.auth&quot;, &quot;true&quot;);
+        //使用SSL，企业邮箱必需！
+        //开启安全协议
+        MailSSLSocketFactory sf = null;
+        try {
+            sf = new MailSSLSocketFactory();
+            sf.setTrustAllHosts(true);
+        } catch (GeneralSecurityException e1) {
+            e1.printStackTrace();
+        }
+        prop.put(&quot;mail.smtp.ssl.enable&quot;, &quot;true&quot;);
+        prop.put(&quot;mail.smtp.ssl.socketFactory&quot;, sf);
+        
+        Session session = Session.getDefaultInstance(prop, new MyAuthenricator(account, pass));
+        session.setDebug(true);
+        MimeMessage mimeMessage = new MimeMessage(session);
+        try {
+            //发件人
+            mimeMessage.setFrom(new InternetAddress(account,&quot;XXX&quot;));        //可以设置发件人的别名
+            //mimeMessage.setFrom(new InternetAddress(account));    //如果不需要就省略
+            //收件人
+            mimeMessage.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
+            //主题
+            mimeMessage.setSubject(subject);
+            //时间
+            mimeMessage.setSentDate(new Date());
+            //容器类，可以包含多个MimeBodyPart对象
+            Multipart mp = new MimeMultipart();
+            
+            //MimeBodyPart可以包装文本，图片，附件
+            MimeBodyPart body = new MimeBodyPart();
+            //HTML正文
+            body.setContent(content, &quot;text/html; charset=UTF-8&quot;);
+            mp.addBodyPart(body);
+            
+            //添加图片&amp;附件
+            body = new MimeBodyPart();
+            body.attachFile(fileStr);
+            mp.addBodyPart(body);
+            
+            //设置邮件内容
+            mimeMessage.setContent(mp);
+            //仅仅发送文本
+            //mimeMessage.setText(content);
+            mimeMessage.saveChanges();
+            Transport.send(mimeMessage);
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
+
+}</pre>
+</div>
+<p>考虑到实际中要保证吞吐量，我写了一个线程：</p>
+<div>
+<pre>package mail.demo;
+
+public class Sending implements Runnable{
+
+    private String to;    //收件人
+    private String subject;    //主题
+    private String content;    //内容
+    private String fileStr;    //附件路径
+
+    public Sending(String to, String subject, String content, String fileStr) {
+        this.to = to;
+        this.subject = subject;
+        this.content = content;
+        this.fileStr = fileStr;
+    }
+
+    @Override
+    public void run() {
+        SendEmailUtil sendEmail = new SendEmailUtil(to, subject, content, fileStr);
+        sendEmail.send();
+    }
+
+}</pre>
+</div>
+<p>线程的建立销毁开销也是很大的，我建了一个线程池，如果遇到批量处理的话可以好用一些。</p>
+<div>
+<pre>package mail.demo;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+/**
+ * 单例，线程池
+ * @author Taozi
+ *
+ */
+public class SendingPool {
+    
+    private SendingPool() {
+    }
+    private static class Inner{
+        private static SendingPool instance = new SendingPool();
+    }
+    
+    public static SendingPool getInstance(){
+        return Inner.instance;
+    }
+    
+    private static int nThreads = 10;
+    private static ExecutorService executor = Executors.newFixedThreadPool(nThreads);
+    
+    public SendingPool addThread(Sending sending){
+        executor.execute(sending);
+        return getInstance();
+    }
+    
+    public void shutDown(){
+        executor.shutdown();
+    }
+}</pre>
+</div>
+<p> 下面是测试类</p>
+<div>
+<pre>package mail.demo;
+
+public class MyTest {
+
+    public static void main(String[] args) {
+        SendingPool pool = SendingPool.getInstance();
+        
+        pool.addThread(new Sending(&quot;收件人&quot;, &quot;AAA&quot;, createEmail().toString(), &quot;file/1.jpg&quot;)).shutDown();
+        
+    }
+    
+    private static StringBuilder createEmail() {
+        StringBuilder emailContent = new StringBuilder(&quot;&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset='UTF-8'&gt;&lt;title&gt;快来买桃子&lt;/title&gt;&lt;style type='text/css'&gt;        .container{            font-family: 'Microsoft YaHei';            width: 600px;            margin: 0 auto;            padding: 8px;            border: 3px dashed #db303f;            border-radius: 6px;        }        .title{            text-align: center;            color: #db303f;        }        .content{            text-align: justify;            color: #717273;            font-weight: 600;        }        footer{            text-align: right;            color: #db303f;            font-weight: 600;            font-size: 18px;        }&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class='container'&gt;&lt;h2 class='title'&gt;好吃的桃子&lt;/h2&gt;&lt;p class='content'&gt;桃子含有维生素A、维生素B和维生素C,儿童多吃桃子可使身体健康成长,因为桃子含有的多种维生索可以直接强化他们的身体和智力。&lt;/p&gt;&lt;footer&gt;联系桃子：11110000&lt;/footer&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;&quot;);
+        return emailContent;
+    }
+}</pre>
+</div>
+<p> 下面是我收到的邮件，Html正文+附件</p>
+<p></p><div><img src="Java + 腾讯企业邮箱 + javamail + SSL 发送邮件 - 小LUA - _files/813478-20170905214119804-1182176920.jpg" type="image/jpeg" data-filename="813478-20170905214119804-1182176920.jpg" height="238" width="576"/></div><p></p>
+<pre>到此就完成了</pre>
+<p> 完整代码去我的GitHub下载（等我等级高了，一定给大家开源好用的框架&amp;工具），<a href="https://github.com/Mysakura/Javamail-demo" target="_blank">Javamail</a></p>
+<p>小伙伴们在使用过程中遇到各种各样的问题，在下一一列举。</p>
+<p>=============================================================================================</p>
+<h2>错误1：</h2>
+<div> javax.mail.AuthenticationFailedException: 535 Error: authentication failed, system busy</div>
+
+<div>身份验证失败，大多数都是这个问题。一种说法是账户密码不是登录密码，而是“<strong>授权码</strong>”；另外一种是“<strong>客户端专用密码</strong>”</div>
+<p>关于<strong>客户端专用密码</strong><strong> 。</strong></p>
+<p><img src="Java + 腾讯企业邮箱 + javamail + SSL 发送邮件 - 小LUA - _files/813478-20170913174806110-1567180785.png" type="image/png" data-filename="813478-20170913174806110-1567180785.png" height="91" width="308"/></p>
+<p></p><div><img src="Java + 腾讯企业邮箱 + javamail + SSL 发送邮件 - 小LUA - _files/813478-20170913174836328-1850651272.png" type="image/png" data-filename="813478-20170913174836328-1850651272.png" height="157" width="576"/></div><p></p>
+<p>如果说您绑定了微信，就不能继续使用<strong>登录密码</strong>了，取代的是“<strong>客户端专用密码</strong>”</p>
+<p> 这里借用一下热心网友的截图，以下是绑定微信后的安全设置：登录方式和专用密码。</p>
+<p></p><div><img src="Java + 腾讯企业邮箱 + javamail + SSL 发送邮件 - 小LUA - _files/813478-20170913175130391-1344922268.png" type="image/png" data-filename="813478-20170913175130391-1344922268.png" height="242" width="576"/></div><p></p>
+<p>如果你开启了这些东西，那么在使用Javamail的时候，密码就要用生成的“<strong>专用密码</strong>”</p>
+<p>关于“<strong>授权码</strong>”</p>
+<p>我想说：“不存在的”，如果你用的是企业邮，那么就不需要这个东西吧，你用个人的才需要（纯属猜测，本人也没用过）</p>
+<h2> 关于发信量</h2>
+<p>有的小伙伴跟我说发了一定数量就不行了，我特地去查了查，原来这里是个坑（对于频繁发送的场景十分不利），截图如下：</p>
+<p></p><div><img src="Java + 腾讯企业邮箱 + javamail + SSL 发送邮件 - 小LUA - _files/813478-20171020165328099-1501421071.png" type="image/png" data-filename="813478-20171020165328099-1501421071.png" height="261" width="576"/></div><p></p>
+<p>所以，我建议想要无限频繁发送，那就去<strong>别的提供商</strong>看看，或者自己搭建<strong>邮件服务器</strong></p></div></div></div><br/></div></span>
+</div></body></html> 

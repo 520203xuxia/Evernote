@@ -1,0 +1,107 @@
+<html>
+<head>
+  <title>PHP页面跳转三种实现方法 - CSDN博客</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.16299 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="960"/>
+<h1>PHP页面跳转三种实现方法 - CSDN博客</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div style="box-sizing:border-box;font-family:sans-serif;text-size-adjust:100%;font-size:62.5%;-webkit-tap-highlight-color:rgba(0, 0, 0, 0);"><div style="box-sizing:border-box;font-family:&quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, SimHei, Arial, SimSun;font-size:16px;line-height:24px;color:rgb(51, 51, 51);background-color:rgb(244, 244, 244);font-weight:400;"><div style="box-sizing:border-box;font-weight:400;"><span style="box-sizing:border-box;"><div style="box-sizing:border-box;box-shadow:rgba(0, 0, 0, 0.05) 0px 2px 4px 0px;background-color:rgb(255, 255, 255);">
+        <h1 style="margin:0px;box-sizing:border-box;font-family:&quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, SimHei, Arial, SimSun;font-size:24px;font-weight:700;line-height:38px;color:rgb(44, 48, 51);padding:0px 29px;">PHP页面跳转三种实现方法</h1>
+        <div style="box-sizing:border-box;margin:0px;font-weight:400;padding:0px 29px 8px;color:rgb(136, 136, 136);border-bottom:1px solid rgb(229, 229, 229);font-size:14px;line-height:38px;margin-top:5px;"><span style="font-weight:400;color:rgb(136, 136, 136);font-size:14px;line-height:38px;display:table;"> </span>
+            <div style="box-sizing:border-box;margin:0px;padding:0px;font-weight:400;float:left;">
+                <span style="box-sizing:border-box;margin:0px;font-weight:400;padding:2px 6px;border:1px solid rgb(228, 235, 244);font-size:14px;color:rgb(120, 144, 156);margin-right:20px;">
+                转载                </span>
+                <span style="box-sizing:border-box;margin:0px;padding:0px;font-weight:400;display:inline-block;color:rgb(187, 187, 187);font-size:14px;">2016年05月26日 22:05:38</span>
+            </div>
+
+            <ul style="box-sizing:border-box;margin:0px;padding:0px;font-weight:400;list-style:none;float:left;margin-left:26px;background-color:rgb(255, 255, 255);font-size:14px;"><span style="font-weight:400;list-style:none;font-size:14px;display:table;"> </span>
+                <li style="box-sizing:border-box;margin:0px;padding:0px;font-weight:400;list-style:none;float:left;color:rgb(187, 187, 187);">标签：</li>
+
+
+                                                            <li style="box-sizing:border-box;margin:0px;padding:0px;font-weight:400;list-style:none;float:left;"><a href="http://so.csdn.net/so/search/s.do?q=php&amp;t=blog" style="background:transparent;box-sizing:border-box;text-decoration:none;margin:0px;padding:0px;font-weight:400;outline:0px;color:rgb(64, 147, 198);display:inline-block;" target="_blank">php</a> </li>
+                                    
+            <span style="font-weight:400;list-style:none;font-size:14px;display:block;clear:both;height:0px;visibility:hidden;">.</span></ul>
+            <ul style="box-sizing:border-box;margin:0px;padding:0px;font-weight:400;list-style:none;float:right;margin-top:5px;">
+                <li style="box-sizing:border-box;margin:0px;padding:0px;font-weight:400;list-style:none;float:left;margin-left:30px;line-height:28px;"></li>
+                
+                
+            </ul>
+        <span style="font-weight:400;color:rgb(136, 136, 136);font-size:14px;line-height:38px;display:block;clear:both;height:0px;visibility:hidden;">.</span></div>
+        <div style="box-sizing:border-box;margin:0px;font-weight:400;padding:20px 30px 0px;margin-bottom:30px;color:rgb(69, 69, 69);overflow:hidden;">
+                            <div style="box-sizing:border-box;margin:0px;padding:0px;font-weight:400;font-family:&quot;microsoft yahei&quot;;font-size:16px;color:rgb(63, 63, 63);">
+                        <h3 style="padding:0px;box-sizing:border-box;font-family:inherit;text-align:start;font-weight:100;line-height:1.1;color:inherit;font-size:1.7em;margin:0.8em 0px;"><a name="t0" style="background:transparent;text-decoration:none;margin:0px;padding:0px;font-weight:400;outline:0px;box-sizing:border-box;color:rgb(79, 161, 219);"></a><strong style="font-weight:bold;box-sizing:border-box;">一、header()函数</strong></h3>
+
+<p style="padding:0px;font-weight:400;box-sizing:border-box;margin:0px 0px 1.7em;line-height:170%;margin-bottom:1.7em;word-wrap:break-word;word-break:normal;">header()函数是PHP中进行页面跳转的一种十分简单的方法。header()函数的主要功能是将HTTP协议标头(header)输出到浏览器。 <br style="box-sizing:border-box;"/>
+header()函数的定义如下： <br style="box-sizing:border-box;"/>
+<strong style="font-weight:bold;box-sizing:border-box;">void header (string string [,bool replace [,int http_response_code]])</strong> <br style="box-sizing:border-box;"/>
+可选参数replace指明是替换前一条类似标头还是添加一条相同类型的标头，默认为替换。 <br style="box-sizing:border-box;"/>
+第二个可选参数http_response_code强制将HTTP相应代码设为指定值。 header函数中Location类型的标头是一种特殊的header调用，常用来实现页面跳转。</p>
+
+
+
+<h4 style="padding:0px;box-sizing:border-box;font-family:inherit;text-align:start;font-weight:100;line-height:1.1;color:inherit;font-size:1.25em;margin:0.8em 0px;"><strong style="font-weight:bold;box-sizing:border-box;">注意：</strong></h4>
+
+<p style="padding:0px;font-weight:400;box-sizing:border-box;margin:0px 0px 1.7em;line-height:170%;margin-bottom:1.7em;word-wrap:break-word;word-break:normal;">1.location和“:”号间不能有空格，否则不会跳转。 <br style="box-sizing:border-box;"/>
+2.在用header前不能有任何的输出。 <br style="box-sizing:border-box;"/>
+3.header后的PHP代码还会被执行。例如，将浏览器重定向到lamp兄弟连官方论坛</p>
+
+<pre style="word-break:break-all;font-family:&quot;Source Code Pro&quot;, monospace;font-weight:400;box-sizing:border-box;display:block;border-radius:0px;border:0px solid rgb(136, 136, 136);background-color:rgba(128, 128, 128, 0.05);color:rgb(51, 51, 51);font-size:14px;word-wrap:break-word;padding:5px 5px 5px 60px;white-space:nowrap;position:relative;overflow-y:hidden;overflow-x:auto;line-height:170%;margin:0px 0px 1.7em;"><code style="border-radius:0px;font-family:&quot;Source Code Pro&quot;, monospace;box-sizing:border-box;background:rgb(255, 255, 255);display:block;white-space:pre;font-size:90%;color:inherit;padding:0px;background-color:transparent;overflow-x:auto;word-wrap:normal;"><span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 0, 0);">&lt;</span> <span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 0, 0);">?</span>php 
+<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(136, 0, 0);">//重定向浏览器 </span>
+<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 0, 136);">header</span>(<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 136, 0);">&quot;Location: http://bbs.lampbrother.net&quot;</span>); 
+<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(136, 0, 0);">//确保重定向后，后续代码不会被执行 </span>
+<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;">...</span><span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;">...</span>
+<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(68, 68, 68);">?&gt;</span><span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;">  </span></code><ul style="position:absolute;box-sizing:border-box;font-weight:400;line-height:170%;padding:6px 0px 40px;list-style:none;margin:0px;width:50px;background-color:rgb(238, 238, 238);top:0px;left:0px;border-right:1px solid rgb(221, 221, 221);text-align:right;"><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">1</li><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">2</li><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">3</li><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">4</li><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">5</li><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">6</li></ul></pre>
+
+
+
+<h3 style="padding:0px;box-sizing:border-box;font-family:inherit;text-align:start;font-weight:100;line-height:1.1;color:inherit;font-size:1.7em;margin:0.8em 0px;"><a name="t1" style="background:transparent;text-decoration:none;margin:0px;padding:0px;font-weight:400;outline:0px;box-sizing:border-box;color:rgb(79, 161, 219);"></a><strong style="font-weight:bold;box-sizing:border-box;">二、Meta标签</strong></h3>
+
+<p style="padding:0px;font-weight:400;box-sizing:border-box;margin:0px 0px 1.7em;line-height:170%;margin-bottom:1.7em;word-wrap:break-word;word-break:normal;">Meta标签是HTML中负责提供文档元信息的标签，在PHP程序中使用该标签，也可以实现页面跳转。 若定义<strong style="font-weight:bold;box-sizing:border-box;">http-equiv为refresh</strong>,则打开该页面时将根据content规定的值在一定时间内跳转到相应页面。 <br style="box-sizing:border-box;"/>
+若设置<strong style="font-weight:bold;box-sizing:border-box;">content=”秒数;url=网址”</strong>，则定义了经过多长时间后页面跳转到指定的网址。例如，使用meta标签实现疫苗后页面自动跳转到LAMP兄弟连官方论坛。</p>
+
+<pre style="word-break:break-all;font-family:&quot;Source Code Pro&quot;, monospace;font-weight:400;box-sizing:border-box;display:block;border-radius:0px;border:0px solid rgb(136, 136, 136);background-color:rgba(128, 128, 128, 0.05);color:rgb(51, 51, 51);font-size:14px;word-wrap:break-word;padding:5px 5px 5px 60px;white-space:nowrap;position:relative;overflow-y:hidden;overflow-x:auto;line-height:170%;margin:0px 0px 1.7em;"><code style="border-radius:0px;font-family:&quot;Source Code Pro&quot;, monospace;box-sizing:border-box;background:rgb(255, 255, 255);display:block;white-space:pre;font-size:90%;color:inherit;padding:0px;background-color:transparent;overflow-x:auto;word-wrap:normal;"><span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 102, 102);">&lt; <span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(102, 0, 102);">meta</span> <span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(102, 0, 102);">http-equiv</span>=<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 136, 0);">&quot;refresh&quot;</span><span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 136, 0);">content=&quot;1;url=http:</span>//<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(102, 0, 102);">bbs.lampbrother.net</span>&quot;&gt;</span> </code><ul style="position:absolute;box-sizing:border-box;font-weight:400;line-height:170%;padding:6px 0px 40px;list-style:none;margin:0px;width:50px;background-color:rgb(238, 238, 238);top:0px;left:0px;border-right:1px solid rgb(221, 221, 221);text-align:right;"><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">1</li></ul></pre>
+
+<p style="padding:0px;font-weight:400;box-sizing:border-box;margin:0px 0px 1.7em;line-height:170%;margin-bottom:1.7em;word-wrap:break-word;word-break:normal;">例如，以下程序meta.php实现在该页面中停留一秒后页面自动跳转到bbs.lampbrother.net。</p>
+
+
+
+<pre style="word-break:break-all;font-family:&quot;Source Code Pro&quot;, monospace;font-weight:400;box-sizing:border-box;display:block;border-radius:0px;border:0px solid rgb(136, 136, 136);background-color:rgba(128, 128, 128, 0.05);color:rgb(51, 51, 51);font-size:14px;word-wrap:break-word;padding:5px 5px 5px 60px;white-space:nowrap;position:relative;overflow-y:hidden;overflow-x:auto;line-height:170%;margin:0px 0px 1.7em;"><code style="border-radius:0px;font-family:&quot;Source Code Pro&quot;, monospace;box-sizing:border-box;background:rgb(255, 255, 255);display:block;white-space:pre;font-size:90%;color:inherit;padding:0px;background-color:transparent;overflow-x:auto;word-wrap:normal;"><span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;"><span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(68, 68, 68);">&lt;?php</span> 
+<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(102, 0, 102);">$url</span> = <span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 136, 0);">&quot;http://bbs.lampbrother.net&quot;</span>; <span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(68, 68, 68);">?&gt;</span></span> 
+<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 102, 102);">&lt;<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 0, 136);">html</span>&gt;</span>   
+  <span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 102, 102);">&lt;<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 0, 136);">head</span>&gt;</span>   
+    <span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 102, 102);">&lt;<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 0, 136);">meta</span> <span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(102, 0, 102);">http-equiv</span>=<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 136, 0);">&quot;refresh&quot;</span> <span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(102, 0, 102);">content</span>=<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 136, 0);">&quot;1;url=&lt; ?php echo $url; ?&gt;&quot;</span>&gt;</span>   
+  <span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 102, 102);">&lt;/<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 0, 136);">head</span>&gt;</span>   
+  <span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 102, 102);">&lt;<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 0, 136);">body</span>&gt;</span>   
+    页面只停留一秒……   
+  <span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 102, 102);">&lt;/<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 0, 136);">body</span>&gt;</span> 
+<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 102, 102);">&lt;/<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 0, 136);">html</span>&gt;</span>  </code><ul style="position:absolute;box-sizing:border-box;font-weight:400;line-height:170%;padding:6px 0px 40px;list-style:none;margin:0px;width:50px;background-color:rgb(238, 238, 238);top:0px;left:0px;border-right:1px solid rgb(221, 221, 221);text-align:right;"><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">1</li><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">2</li><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">3</li><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">4</li><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">5</li><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">6</li><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">7</li><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">8</li><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">9</li><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">10</li></ul></pre>
+
+<h3 style="padding:0px;box-sizing:border-box;font-family:inherit;text-align:start;font-weight:100;line-height:1.1;color:inherit;font-size:1.7em;margin:0.8em 0px;"><a name="t2" style="background:transparent;text-decoration:none;margin:0px;padding:0px;font-weight:400;outline:0px;box-sizing:border-box;color:rgb(79, 161, 219);"></a><strong style="font-weight:bold;box-sizing:border-box;">三、JavaScript</strong></h3>
+
+<p style="padding:0px;font-weight:400;box-sizing:border-box;margin:0px 0px 1.7em;line-height:170%;margin-bottom:1.7em;word-wrap:break-word;word-break:normal;">例如，此代码可以放在程序中的任何合法位置。</p>
+
+
+
+<pre style="word-break:break-all;font-family:&quot;Source Code Pro&quot;, monospace;font-weight:400;box-sizing:border-box;display:block;border-radius:0px;border:0px solid rgb(136, 136, 136);background-color:rgba(128, 128, 128, 0.05);color:rgb(51, 51, 51);font-size:14px;word-wrap:break-word;padding:5px 5px 5px 60px;white-space:nowrap;position:relative;overflow-y:hidden;overflow-x:auto;line-height:170%;margin:0px 0px 1.7em;"><code style="border-radius:0px;font-family:&quot;Source Code Pro&quot;, monospace;box-sizing:border-box;background:rgb(255, 255, 255);display:block;white-space:pre;font-size:90%;color:inherit;padding:0px;background-color:transparent;overflow-x:auto;word-wrap:normal;">&lt; ?php  
+<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(102, 0, 102);">$url</span> = <span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 136, 0);">&quot;http://bbs.lampbrother.net&quot;</span>;  
+<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(102, 0, 102);">echo</span> <span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 136, 0);">&quot;&lt; script language='javascript' 
+type='text/javascript'&gt;&quot;</span>;  
+<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(102, 0, 102);">echo</span> <span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 136, 0);">&quot;window.location.href='<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(102, 0, 102);">$url</span>'&quot;</span>;  
+<span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(102, 0, 102);">echo</span> <span style="margin:0px;padding:0px;font-weight:400;box-sizing:border-box;color:rgb(0, 136, 0);">&quot;&lt; /script&gt;&quot;</span>;  
+?&gt; </code><ul style="position:absolute;box-sizing:border-box;font-weight:400;line-height:170%;padding:6px 0px 40px;list-style:none;margin:0px;width:50px;background-color:rgb(238, 238, 238);top:0px;left:0px;border-right:1px solid rgb(221, 221, 221);text-align:right;"><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">1</li><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">2</li><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">3</li><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">4</li><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">5</li><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">6</li><li style="margin:0px;font-weight:400;box-sizing:border-box;display:list-item;padding:0px 5px;list-style:none;margin-left:0px;color:rgb(153, 153, 153);">7</li></ul></pre>
+
+<p style="padding:0px;font-weight:400;box-sizing:border-box;margin:0px 0px 1.7em;line-height:170%;margin-bottom:1.7em;word-wrap:break-word;word-break:normal;">【完】</p>                            </div>
+                
+                    </div>
+    </div></span></div></div></div></div><br/></div></span>
+</div></body></html> 

@@ -1,0 +1,323 @@
+<html>
+<head>
+  <title>spring实现注册（邮箱验证+有效时间） - WaveBridge的博客 - CSDN博客</title>
+  <basefont face="微软雅黑" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="Evernote Windows/305825 (zh-CN, DDL); Windows/10.0.16299 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 微软雅黑;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="925"/>
+<h1>spring实现注册（邮箱验证+有效时间） - WaveBridge的博客 - CSDN博客</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div><div style="font-family:&quot;microsoft yahei&quot;;background:url(&quot;http://static.blog.csdn.net/skin/skin-yellow/css/../images/bg-yellow.png&quot;) repeat;"><div><div style="min-width:980px;font-size:12px;"><div style="box-sizing:border-box;"><div style="overflow:hidden;background-color:rgb(255, 255, 255);"><div style="background:rgb(255, 255, 255);border-image:initial;"><div style="font-size:15px;color:rgb(85, 85, 85);"><div style="font-family:&quot;microsoft yahei&quot;;font-size:16px;color:rgb(63, 63, 63);"><h1 style="padding:0px;box-sizing:border-box;margin:0.8em 0px;font-family:inherit;font-weight:300;color:inherit;text-align:start;font-size:2.6em;"><a name="t0" style="text-decoration:none;box-sizing:border-box;color:rgb(12, 137, 207);" target="_blank"></a>spring实现注册（邮箱验证+有效时间）</h1>
+
+<h3 style="padding:0px;box-sizing:border-box;margin:0.8em 0px;font-family:inherit;font-weight:300;color:inherit;text-align:start;font-size:1.7em;"><a name="t1" style="text-decoration:none;box-sizing:border-box;color:rgb(12, 137, 207);" target="_blank"></a>实现逻辑</h3>
+
+<ol style="box-sizing:border-box;margin-bottom:1.7em;"><li style="box-sizing:border-box;"><p style="padding:0px;box-sizing:border-box;margin:0px 0px 1.7em;margin-bottom:1.7em;">用户注册时，输入邮箱地址，获取验证码，我们随机生成5位数字验证码发送给用户的邮箱。同时我们把验证码和当前时间存储到HttpSession对象中(格式 ：  验证码#时间)。</p></li><li style="box-sizing:border-box;"><p style="padding:0px;box-sizing:border-box;margin:0px 0px 1.7em;margin-bottom:1.7em;">然后用户通过表单提交自己的注册信息和验证码。我们先判断用户名是否重复（为空和密码一致就交给前端吧），然后我们从session中取出我们存储的字符串分隔，获取验证码和生成验证码的时间，先比较验证码是否正确，如果正确就比较时间是否在一段时间内，都符合才注册（进行数据库操作）。</p></li><li style="box-sizing:border-box;"><p style="padding:0px;box-sizing:border-box;margin:0px 0px 1.7em;margin-bottom:1.7em;">代码实现尊崇ssh框架结构，action，service，dao逐层调用。</p></li></ol>
+
+<p style="padding:0px;box-sizing:border-box;margin:0px 0px 1.7em;margin-bottom:1.7em;"><strong style="box-sizing:border-box;">1：引入jar包</strong></p>
+
+<p style="padding:0px;box-sizing:border-box;margin:0px 0px 1.7em;margin-bottom:1.7em;">spring自带的包  spring-context-support, 就可以使用spring自带的发送邮件API。</p>
+
+<p style="padding:0px;box-sizing:border-box;margin:0px 0px 1.7em;margin-bottom:1.7em;"><strong style="box-sizing:border-box;">2：创建MailUtil对象</strong></p>
+
+
+
+<pre style="word-wrap:break-word;box-sizing:border-box;color:rgb(51, 51, 51);white-space:nowrap;display:block;padding:5px 5px 5px 60px;font-size:14px;word-break:break-all;overflow-x:auto;font-family:&quot;Source Code Pro&quot;, monospace;background-color:rgba(128, 128, 128, 0.05);border:0px solid rgb(136, 136, 136);border-radius:0px;position:relative;overflow-y:hidden;margin:0px 0px 1.7em;"><code style="font-size:90%;display:block;background:rgb(255, 255, 255);box-sizing:border-box;font-family:&quot;Source Code Pro&quot;, monospace;color:inherit;padding:0px;background-color:transparent;white-space:pre;border-radius:0px;overflow-x:auto;word-wrap:normal;">    import  java.util.Properties;
+    import  org.springframework.mail.SimpleMailMessage; 
+    import  org.springframework.mail.javamail.JavaMailSenderImpl; 
+
+    <span style="color:rgb(0, 0, 136);box-sizing:border-box;">public</span> <span style="color:rgb(0, 0, 136);box-sizing:border-box;">class</span> MailUtil {
+
+        <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//使用对象注入的方式  记得配置文件</span>
+        <span style="color:rgb(0, 0, 136);box-sizing:border-box;">private</span> JavaMailSenderImpl senderImpl;
+        <span style="color:rgb(0, 0, 136);box-sizing:border-box;">public</span> <span style="color:rgb(0, 0, 136);box-sizing:border-box;">void</span> <span style="box-sizing:border-box;">setSenderImpl</span>(JavaMailSenderImpl senderImpl) {
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">this</span>.senderImpl = senderImpl;
+        }
+
+        <span style="color:rgb(0, 0, 136);box-sizing:border-box;">private</span> SimpleMailMessage mailMessage;
+        <span style="color:rgb(0, 0, 136);box-sizing:border-box;">public</span> <span style="color:rgb(0, 0, 136);box-sizing:border-box;">void</span> <span style="box-sizing:border-box;">setMailMessage</span>(SimpleMailMessage mailMessage) {
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">this</span>.mailMessage = mailMessage;
+        }
+
+        <span style="color:rgb(0, 0, 136);box-sizing:border-box;">private</span> Properties prop;
+        <span style="color:rgb(0, 0, 136);box-sizing:border-box;">public</span> <span style="color:rgb(0, 0, 136);box-sizing:border-box;">void</span> <span style="box-sizing:border-box;">setProp</span>(Properties prop) {
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">this</span>.prop = prop;
+        }
+
+        <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//发送验证码的方法,to是目标邮箱地址，text是发送的验证码（事先生成）</span>
+        <span style="color:rgb(0, 0, 136);box-sizing:border-box;">public</span> boolean <span style="box-sizing:border-box;">sendMail</span> (String to,String text) {
+            System.<span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.println(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;sendMail...util...&quot;</span>);
+
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">try</span>{
+                <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//设定mail server</span>
+                senderImpl.setHost(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;smtp.163.com&quot;</span>);
+
+                <span style="color:rgb(136, 0, 0);box-sizing:border-box;">// 设置收件人，寄件人 用数组发送多个邮件</span>
+                <span style="color:rgb(136, 0, 0);box-sizing:border-box;">// String[] array = new String[]    {&quot;sun111@163.com&quot;,&quot;sun222@sohu.com&quot;};    </span>
+                <span style="color:rgb(136, 0, 0);box-sizing:border-box;">// mailMessage.setTo(array);  </span>
+
+                mailMessage.setTo(to); 
+                mailMessage.setFrom( <span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;自己的邮箱&quot;</span> ); 
+                mailMessage.setSubject( <span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;主题&quot;</span> ); 
+                mailMessage.setText(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;内容&quot;</span> + text); 
+
+                senderImpl.setUsername(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;自己的邮箱&quot;</span>);
+                senderImpl.setPassword(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;密码&quot;</span>);
+
+                prop.put(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;mail.smtp.auth&quot;</span>,<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;true&quot;</span>);
+                prop.put(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;mail.smtp.timeout&quot;</span>,<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;25000&quot;</span>);
+                senderImpl.setJavaMailProperties(prop);
+
+                <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//发送邮件</span>
+                senderImpl.send(mailMessage);
+
+                System.<span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.println(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;发送邮件成功&quot;</span>);
+
+                <span style="color:rgb(0, 0, 136);box-sizing:border-box;">return</span> <span style="color:rgb(0, 0, 136);box-sizing:border-box;">true</span>;
+            }<span style="color:rgb(0, 0, 136);box-sizing:border-box;">catch</span> (Exception e) {
+                System.<span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.println(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;发送邮件失败&quot;</span>);
+                <span style="color:rgb(0, 0, 136);box-sizing:border-box;">return</span> <span style="color:rgb(0, 0, 136);box-sizing:border-box;">false</span>;
+            }
+        }
+
+    }
+</code><ul style="left:0px;box-sizing:border-box;position:absolute;width:50px;background-color:rgb(238, 238, 238);top:0px;margin:0px;padding:6px 0px 40px;border-right:1px solid rgb(221, 221, 221);list-style:none;text-align:right;"><li>123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960</li></ul></pre>
+
+<p style="padding:0px;box-sizing:border-box;margin:0px 0px 1.7em;margin-bottom:1.7em;"><strong style="box-sizing:border-box;">3：创建TimeUtil类</strong></p>
+
+<p style="padding:0px;box-sizing:border-box;margin:0px 0px 1.7em;margin-bottom:1.7em;">因为我们是保证有效时间的，所以就要时间工具</p>
+
+<pre style="word-wrap:break-word;box-sizing:border-box;color:rgb(51, 51, 51);white-space:nowrap;display:block;padding:5px 5px 5px 60px;font-size:14px;word-break:break-all;overflow-x:auto;font-family:&quot;Source Code Pro&quot;, monospace;background-color:rgba(128, 128, 128, 0.05);border:0px solid rgb(136, 136, 136);border-radius:0px;position:relative;overflow-y:hidden;margin:0px 0px 1.7em;"><code style="font-size:90%;display:block;background:rgb(255, 255, 255);box-sizing:border-box;font-family:&quot;Source Code Pro&quot;, monospace;color:inherit;padding:0px;background-color:transparent;white-space:pre;border-radius:0px;overflow-x:auto;word-wrap:normal;">
+    import java.text.SimpleDateFormat;
+    import java.util.Calendar;
+    import java.util.Date;
+
+    import org.junit.Test;
+
+    <span style="color:rgb(0, 0, 136);box-sizing:border-box;">public</span> <span style="color:rgb(0, 0, 136);box-sizing:border-box;">class</span> TimeUtil {
+
+        <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//获取时间  返回毫秒级时间</span>
+        <span style="color:rgb(0, 0, 136);box-sizing:border-box;">public</span> String <span style="box-sizing:border-box;">getTime</span>() {
+            System.<span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.println(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;getTime...util...&quot;</span>);
+
+            <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);</span>
+            Calendar calendar = Calendar.getInstance();
+            Long date = calendar.getTime().getTime();            <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//获取毫秒时间</span>
+
+            <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//String dateStringPaString = sdf.format(date);</span>
+            <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//System.out.println(dateStringPaString);</span>
+
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">return</span> date.toString();
+        }
+
+        <span style="color:rgb(0, 0, 136);box-sizing:border-box;">public</span> boolean <span style="box-sizing:border-box;">cmpTime</span>(String time) {
+            System.<span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.println(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;cmpTime...util...&quot;</span>);
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">long</span> tempTime = Long.parseLong(time);
+            System.<span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.println(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;tempTime&quot;</span>+tempTime);
+
+            <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//在获取现在的时间</span>
+            Calendar calendar = Calendar.getInstance();
+            Long date = calendar.getTime().getTime();            <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//获取毫秒时间</span>
+            System.<span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.println(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;date&quot;</span>+date);
+
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">if</span>(date - tempTime &gt; <span style="color:rgb(0, 102, 102);box-sizing:border-box;">600000</span> ) {   <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//10分钟</span>
+                <span style="color:rgb(0, 0, 136);box-sizing:border-box;">return</span> <span style="color:rgb(0, 0, 136);box-sizing:border-box;">false</span>;
+            } <span style="color:rgb(0, 0, 136);box-sizing:border-box;">else</span> {
+                <span style="color:rgb(0, 0, 136);box-sizing:border-box;">return</span> <span style="color:rgb(0, 0, 136);box-sizing:border-box;">true</span>;
+            }
+
+        }
+    }</code><ul style="left:0px;box-sizing:border-box;position:absolute;width:50px;background-color:rgb(238, 238, 238);top:0px;margin:0px;padding:6px 0px 40px;border-right:1px solid rgb(221, 221, 221);list-style:none;text-align:right;"><li>1234567891011121314151617181920212223242526272829303132333435363738394041</li></ul></pre>
+
+<p style="padding:0px;box-sizing:border-box;margin:0px 0px 1.7em;margin-bottom:1.7em;"><strong style="box-sizing:border-box;">4：Action</strong></p>
+
+<pre style="word-wrap:break-word;box-sizing:border-box;color:rgb(51, 51, 51);white-space:nowrap;display:block;padding:5px 5px 5px 60px;font-size:14px;word-break:break-all;overflow-x:auto;font-family:&quot;Source Code Pro&quot;, monospace;background-color:rgba(128, 128, 128, 0.05);border:0px solid rgb(136, 136, 136);border-radius:0px;position:relative;overflow-y:hidden;margin:0px 0px 1.7em;"><code style="font-size:90%;display:block;background:rgb(255, 255, 255);box-sizing:border-box;font-family:&quot;Source Code Pro&quot;, monospace;color:inherit;padding:0px;background-color:transparent;white-space:pre;border-radius:0px;overflow-x:auto;word-wrap:normal;">    <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//获取邮箱验证码</span>
+    <span style="color:rgb(0, 0, 136);box-sizing:border-box;">public</span> String <span style="box-sizing:border-box;">getVCode</span>() throws IOException {
+        System.<span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.println(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;getVCode...action...&quot;</span>);
+        <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//获得request和response对象</span>
+        HttpServletRequest request = ServletActionContext.getRequest();
+        HttpServletResponse response = ServletActionContext.getResponse();
+        response.setContentType(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;application/json;charset=utf-8&quot;</span>);
+        response.setHeader(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;Access-Control-Allow-Origin&quot;</span>, <span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;*&quot;</span>);
+        PrintWriter <span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span> = response.getWriter();
+
+        JSONObject json = <span style="color:rgb(0, 0, 136);box-sizing:border-box;">new</span> JSONObject();
+        <span style="color:rgb(0, 0, 136);box-sizing:border-box;">try</span>{
+            String email = request.getParameter(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;email&quot;</span>);
+
+            boolean flag = userService.getVCode(email);
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">if</span>(flag == <span style="color:rgb(0, 0, 136);box-sizing:border-box;">true</span>) {
+                json.put(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;msg&quot;</span>,<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;1&quot;</span>);                 <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//生成了验证码并发送给了用户</span>
+            } <span style="color:rgb(0, 0, 136);box-sizing:border-box;">else</span> {
+                json.put(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;msg&quot;</span>,<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;0&quot;</span>);                 <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//未获取到</span>
+            }
+
+        }<span style="color:rgb(0, 0, 136);box-sizing:border-box;">catch</span> (Exception e) {
+            json.put(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;msg&quot;</span>,<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;0&quot;</span>);
+        }<span style="color:rgb(0, 0, 136);box-sizing:border-box;">finally</span> {
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.write(json.toString());
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.flush();
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.close();
+        }
+
+        <span style="color:rgb(0, 0, 136);box-sizing:border-box;">return</span> <span style="color:rgb(0, 0, 136);box-sizing:border-box;">null</span>;
+    }
+
+
+    <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//用户注册</span>
+    <span style="color:rgb(0, 0, 136);box-sizing:border-box;">public</span> String <span style="box-sizing:border-box;">register</span>() throws IOException {
+        System.<span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.println(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;register...action...&quot;</span>);
+        <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//获得request和response对象</span>
+        HttpServletRequest request = ServletActionContext.getRequest();
+        HttpServletResponse response = ServletActionContext.getResponse();
+        response.setContentType(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;application/json;charset=utf-8&quot;</span>);
+        response.setHeader(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;Access-Control-Allow-Origin&quot;</span>, <span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;*&quot;</span>);
+        PrintWriter <span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span> = response.getWriter();
+
+        JSONObject json = <span style="color:rgb(0, 0, 136);box-sizing:border-box;">new</span> JSONObject();
+        <span style="color:rgb(0, 0, 136);box-sizing:border-box;">try</span>{
+            String username = request.getParameter(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;username&quot;</span>);
+            String password = request.getParameter(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;password&quot;</span>);
+            String nickname = request.getParameter(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;nickname&quot;</span>);
+            String email    = request.getParameter(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;email&quot;</span>);
+            String vcode    = request.getParameter(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;vcode&quot;</span>);
+
+            <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//先查找该用户名是否被注册</span>
+            boolean flag = userService.searchUser(username);
+
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">if</span>(flag == <span style="color:rgb(0, 0, 136);box-sizing:border-box;">true</span>) { 
+                json.put(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;msg&quot;</span>,<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;3&quot;</span>);                  <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//用户名重复</span>
+            } <span style="color:rgb(0, 0, 136);box-sizing:border-box;">else</span> {
+                <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//看验证码是否正确以及是否失效</span>
+                flag = userService.cmpVCode(vcode);
+
+                <span style="color:rgb(0, 0, 136);box-sizing:border-box;">if</span>(flag == <span style="color:rgb(0, 0, 136);box-sizing:border-box;">true</span>){
+
+                    User user = <span style="color:rgb(0, 0, 136);box-sizing:border-box;">new</span> User();
+                    user.setUsername(username);
+                    user.setPassword(password);
+                    user.setNickname(nickname);
+                    user.setEmail(email);               
+                    boolean flag2 =userService.register(user);
+
+                    <span style="color:rgb(0, 0, 136);box-sizing:border-box;">if</span>(flag2 == <span style="color:rgb(0, 0, 136);box-sizing:border-box;">true</span>) {
+                        json.put(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;msg&quot;</span>, <span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;1&quot;</span>);             <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//注册成功</span>
+
+                    } <span style="color:rgb(0, 0, 136);box-sizing:border-box;">else</span> {
+                        json.put(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;msg&quot;</span>,<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;0&quot;</span>);              <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//注册失败</span>
+                    }
+                } <span style="color:rgb(0, 0, 136);box-sizing:border-box;">else</span> {
+                    System.<span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.println(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;验证码匹配失败&quot;</span>);
+                    json.put(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;msg&quot;</span>, <span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;0&quot;</span>);                 <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//验证码匹配失败</span>
+                }
+            }
+
+        } <span style="color:rgb(0, 0, 136);box-sizing:border-box;">catch</span>(Exception e) {
+            System.<span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.println(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;注册异常&quot;</span>);
+            json.put(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;msg&quot;</span>, <span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;0&quot;</span>);                     <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//注册 异常</span>
+        } <span style="color:rgb(0, 0, 136);box-sizing:border-box;">finally</span> {
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.write(json.toString());
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.flush();
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.close();
+        }
+
+        <span style="color:rgb(0, 0, 136);box-sizing:border-box;">return</span> <span style="color:rgb(0, 0, 136);box-sizing:border-box;">null</span>;
+    }</code><ul style="left:0px;box-sizing:border-box;position:absolute;width:50px;background-color:rgb(238, 238, 238);top:0px;margin:0px;padding:6px 0px 40px;border-right:1px solid rgb(221, 221, 221);list-style:none;text-align:right;"><li>1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192</li></ul></pre>
+
+<p style="padding:0px;box-sizing:border-box;margin:0px 0px 1.7em;margin-bottom:1.7em;"><strong style="box-sizing:border-box;">5：service</strong></p>
+
+
+
+<pre style="word-wrap:break-word;box-sizing:border-box;color:rgb(51, 51, 51);white-space:nowrap;display:block;padding:5px 5px 5px 60px;font-size:14px;word-break:break-all;overflow-x:auto;font-family:&quot;Source Code Pro&quot;, monospace;background-color:rgba(128, 128, 128, 0.05);border:0px solid rgb(136, 136, 136);border-radius:0px;position:relative;overflow-y:hidden;margin:0px 0px 1.7em;"><code style="font-size:90%;display:block;background:rgb(255, 255, 255);box-sizing:border-box;font-family:&quot;Source Code Pro&quot;, monospace;color:inherit;padding:0px;background-color:transparent;white-space:pre;border-radius:0px;overflow-x:auto;word-wrap:normal;">    <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//发送邮件获取验证码</span>
+    <span style="color:rgb(0, 0, 136);box-sizing:border-box;">public</span> boolean <span style="box-sizing:border-box;">getVCode</span>(String email) {
+        System.<span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.println(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;getVCode...service...&quot;</span>);
+        <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//随机生成5验证码</span>
+        Integer x =(<span style="color:rgb(0, 0, 136);box-sizing:border-box;">int</span>)((Math.random()*<span style="color:rgb(0, 102, 102);box-sizing:border-box;">9</span>+<span style="color:rgb(0, 102, 102);box-sizing:border-box;">1</span>)*<span style="color:rgb(0, 102, 102);box-sizing:border-box;">10000</span>);  
+        String text = x.toString(); 
+        boolean flag = mailUtil.sendMail(email, text);
+        <span style="color:rgb(0, 0, 136);box-sizing:border-box;">if</span>(flag == <span style="color:rgb(0, 0, 136);box-sizing:border-box;">true</span>){
+            <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//发送成功，把验证码和时间记录</span>
+            String nowTime = timeUtil.getTime();
+
+            <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//存入session  验证码#时间</span>
+            HttpSession session = ServletActionContext.getRequest().getSession();
+            session.setAttribute(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;vcodeTime&quot;</span>,text+<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;#&quot;</span>+nowTime);
+            System.<span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.println(session.getAttribute(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;vcodeTime&quot;</span>));
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">return</span> <span style="color:rgb(0, 0, 136);box-sizing:border-box;">true</span>;
+
+        } <span style="color:rgb(0, 0, 136);box-sizing:border-box;">else</span> {
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">return</span> <span style="color:rgb(0, 0, 136);box-sizing:border-box;">false</span>;
+        }
+    }
+
+
+    <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//比较验证码是否正确以及是否失效</span>
+    <span style="color:rgb(0, 0, 136);box-sizing:border-box;">public</span> boolean <span style="box-sizing:border-box;">cmpVCode</span>(String vcode) {
+        System.<span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.println(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;cmpVCode...service...&quot;</span>);
+
+        <span style="color:rgb(0, 0, 136);box-sizing:border-box;">try</span>{
+            HttpSession session = ServletActionContext.getRequest().getSession();
+            String vcodeTime =  (String) session.getAttribute(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;vcodeTime&quot;</span>);
+            String vcodeTimeArray[] = vcodeTime.split(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;#&quot;</span>);
+
+            <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//先比较验证码是否正确</span>
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">if</span>(vcodeTimeArray[<span style="color:rgb(0, 102, 102);box-sizing:border-box;">0</span>].equals(vcode)) {
+                boolean flag = timeUtil.cmpTime(vcodeTimeArray[<span style="color:rgb(0, 102, 102);box-sizing:border-box;">1</span>]);
+
+                <span style="color:rgb(0, 0, 136);box-sizing:border-box;">if</span>(flag == <span style="color:rgb(0, 0, 136);box-sizing:border-box;">true</span>){
+                    <span style="color:rgb(0, 0, 136);box-sizing:border-box;">return</span> <span style="color:rgb(0, 0, 136);box-sizing:border-box;">true</span>;
+                }
+
+            }
+
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">return</span> <span style="color:rgb(0, 0, 136);box-sizing:border-box;">false</span>;
+
+        } <span style="color:rgb(0, 0, 136);box-sizing:border-box;">catch</span> (Exception e) {
+            System.<span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.println(e.toString());
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">return</span> <span style="color:rgb(0, 0, 136);box-sizing:border-box;">false</span>;
+        }    
+    }
+
+
+
+    <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//注册</span>
+    <span style="color:rgb(0, 0, 136);box-sizing:border-box;">public</span> boolean <span style="box-sizing:border-box;">register</span>(User user) {
+        System.<span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.println(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;register...service...&quot;</span>);
+
+        <span style="color:rgb(0, 0, 136);box-sizing:border-box;">int</span> flag = userDao.addUser(user);
+
+        <span style="color:rgb(0, 0, 136);box-sizing:border-box;">if</span>(flag != <span style="color:rgb(0, 102, 102);box-sizing:border-box;">0</span>) {
+            HttpSession session = ServletActionContext.getRequest().getSession();
+            session.setAttribute(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;uid&quot;</span>, flag);               <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//用户id放入 session</span>
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">return</span> <span style="color:rgb(0, 0, 136);box-sizing:border-box;">true</span>;
+        } <span style="color:rgb(0, 0, 136);box-sizing:border-box;">else</span> {
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">return</span> <span style="color:rgb(0, 0, 136);box-sizing:border-box;">false</span>;
+        }
+
+    }</code><ul style="left:0px;box-sizing:border-box;position:absolute;width:50px;background-color:rgb(238, 238, 238);top:0px;margin:0px;padding:6px 0px 40px;border-right:1px solid rgb(221, 221, 221);list-style:none;text-align:right;"><li>12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667</li></ul></pre>
+
+<p style="padding:0px;box-sizing:border-box;margin:0px 0px 1.7em;margin-bottom:1.7em;"><strong style="box-sizing:border-box;">6：dao</strong></p>
+
+
+
+<pre style="word-wrap:break-word;box-sizing:border-box;color:rgb(51, 51, 51);white-space:nowrap;display:block;padding:5px 5px 5px 60px;font-size:14px;word-break:break-all;overflow-x:auto;font-family:&quot;Source Code Pro&quot;, monospace;background-color:rgba(128, 128, 128, 0.05);border:0px solid rgb(136, 136, 136);border-radius:0px;position:relative;overflow-y:hidden;margin:0px 0px 1.7em;"><code style="font-size:90%;display:block;background:rgb(255, 255, 255);box-sizing:border-box;font-family:&quot;Source Code Pro&quot;, monospace;color:inherit;padding:0px;background-color:transparent;white-space:pre;border-radius:0px;overflow-x:auto;word-wrap:normal;">    <span style="color:rgb(136, 0, 0);box-sizing:border-box;">//添加用户</span>
+    <span style="color:rgb(0, 0, 136);box-sizing:border-box;">public</span> <span style="color:rgb(0, 0, 136);box-sizing:border-box;">int</span> <span style="box-sizing:border-box;">addUser</span>(User user) {
+        System.<span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.println(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;addUser...dao...&quot;</span>);
+        <span style="color:rgb(0, 0, 136);box-sizing:border-box;">try</span>{
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">int</span> flag = (<span style="color:rgb(0, 0, 136);box-sizing:border-box;">int</span>)hibernateTemplate.save(user);
+            System.<span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.println(<span style="color:rgb(0, 136, 0);box-sizing:border-box;">&quot;save后返回的flag值&quot;</span> + flag);
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">return</span> flag;
+        }<span style="color:rgb(0, 0, 136);box-sizing:border-box;">catch</span> (Exception e) {
+            System.<span style="color:rgb(0, 0, 136);box-sizing:border-box;">out</span>.println(e.toString());
+            <span style="color:rgb(0, 0, 136);box-sizing:border-box;">return</span> <span style="color:rgb(0, 102, 102);box-sizing:border-box;">0</span>;
+        }
+
+    }</code><ul style="left:0px;box-sizing:border-box;position:absolute;width:50px;background-color:rgb(238, 238, 238);top:0px;margin:0px;padding:6px 0px 40px;border-right:1px solid rgb(221, 221, 221);list-style:none;text-align:right;"><li>12345678910111213</li></ul></pre></div></div></div></div></div></div></div></div></div></div><br/></div></span>
+</div></body></html> 
